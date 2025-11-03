@@ -1,0 +1,20 @@
+[package]
+name = "rust_harder_dll"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+reqwest = { version = "0.12.8", features = ["blocking", "json"] }
+winapi = { version = "0.3.9", features = ["winbase", "synchapi", "processthreadsapi", "libloaderapi", "minwinbase", "errhandlingapi", "sysinfoapi", "ntdef", "minwindef"] }
+dllproxymacros = "0.2.0"
+
+[dependencies.windows]
+version = "0.*"
+features = [
+    "Win32_Foundation",
+    "Win32_System_SystemServices",
+    "Win32_UI_WindowsAndMessaging",
+]
