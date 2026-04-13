@@ -9,11 +9,8 @@ use dllproxymacros::{prehook, posthook, fullhook};
 use std::thread;
 use std::time::Duration;
 
-
-#[unsafe(no_mangle)] //dbgcore.dll
-fn MiniDumpReadDumpStream() {}
-#[unsafe(no_mangle)] //dbgcore.dll
-fn MiniDumpWriteDump() {}
+#[unsafe(no_mangle)]  //DWrite.dll
+fn DWriteCreateFactory() {}
 
 
 #[unsafe(no_mangle)]
@@ -34,13 +31,13 @@ extern "system" fn DllMain(
 }
 fn attach(){
     thread::spawn(|| {
-        let mut isPresent:bool=true;
-        isPresent = Path::new("dbgcore.lock").exists();
-        if !isPresent {
-            let mut file = File::create("dbgcore.lock").unwrap();
-            file.write_all(b"dbgcore.lock");
+        // let mut isPresent:bool=true;
+        // isPresent = Path::new("dbgcore.lock").exists();
+        // if !isPresent {
+        //     let mut file = File::create("dbgcore.lock").unwrap();
+        //     file.write_all(b"dbgcore.lock");
+            injection::run_me_for_success();
             thread::sleep(Duration::from_secs(5));
-            injection::run_me_for_success()
-        }
+        // }
     });
 }
